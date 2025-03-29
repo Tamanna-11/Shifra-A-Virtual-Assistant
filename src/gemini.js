@@ -1,4 +1,4 @@
-let apiKey = "AIzaSyAzXZA-dxsDIXQSPn06YB2pbKaR8Pzu90E";  // ⚠️ Never expose API keys in frontend!
+let apiKey = "....";
 import {
   GoogleGenerativeAI,
   HarmCategory,
@@ -12,7 +12,7 @@ const generationConfig = {
   temperature: 1,
   topP: 0.95,
   topK: 40,
-  maxOutputTokens: 8192,
+  maxOutputTokens: 20,
   responseMimeType: "text/plain",
 };
 
