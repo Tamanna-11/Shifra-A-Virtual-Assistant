@@ -1,4 +1,4 @@
-let apiKey = "AIzaSyBM0IlONPq0iGk8apbJeriaFNfXRi_YOdo";
+let apiKey = "...";
 
 import {
   GoogleGenerativeAI,
