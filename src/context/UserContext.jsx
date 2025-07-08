@@ -1,9 +1,10 @@
 import React, { createContext, useState } from "react";
-import run from "../gemini"; // Import AI function
+import run from "../gemini"; // AI function
 
-export const dataContext = createContext();
+// Exporting the context object
+export const UserContext = createContext();
 
-function UserContext({ children }) {
+function UserContextProvider({ children }) {
   const [speaking, setSpeaking] = useState(false);
   const [prompt, setPrompt] = useState("Listening...");
   const [response, setResponse] = useState(false);
@@ -13,47 +14,40 @@ function UserContext({ children }) {
       console.error("❌ No text to speak!");
       return;
     }
+
     let cleanText = text.replace(/\*/g, "");
-    window.speechSynthesis.cancel(); // Stop any ongoing speech
+    window.speechSynthesis.cancel();
 
-    let text_speak = new SpeechSynthesisUtterance(cleanText);
-    text_speak.volume = 1;
-    text_speak.rate = 0.9;
-    text_speak.pitch = 1;
-    text_speak.lang = "en-US";
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.volume = 1;
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    utterance.lang = "en-US";
 
-    console.log("🔊 Speaking:", cleanText);
-
-    text_speak.onerror = (e) => console.error("❌ Speech synthesis error:", e);
-
-    text_speak.onstart = () => {
+    utterance.onerror = (e) => console.error("❌ Speech synthesis error:", e);
+    utterance.onstart = () => {
       setSpeaking(true);
       setResponse(true);
       setPrompt(text);
     };
-
-    text_speak.onend = () => {
+    utterance.onend = () => {
       setSpeaking(false);
       setResponse(false);
     };
 
     setTimeout(() => {
-      window.speechSynthesis.speak(text_speak);
+      window.speechSynthesis.speak(utterance);
     }, 100);
   }
 
   async function aiResponse(userInput) {
-    console.log("🤖 Sending to AI:", userInput);
     try {
       setPrompt(userInput);
-      setResponse(false); // Reset response before getting AI reply
-      let aiText = await run(userInput);
-
-      let newText = aiText.replace(/google/gi, "Tamanna Jhorar"); // Replace "google" with "Tamanna Jhorar"
-
-      console.log("✅ AI Response:", newText);
-      setPrompt(newText);
-      speak(newText);
+      setResponse(false);
+      const aiText = await run(userInput);
+      const finalText = aiText.replace(/google/gi, "Tamanna Jhorar");
+      setPrompt(finalText);
+      speak(finalText);
       setResponse(true);
     } catch (error) {
       console.error("❌ Error fetching AI response:", error);
@@ -61,72 +55,62 @@ function UserContext({ children }) {
     }
   }
 
-  let speechRecognition =
+  const speechRecognition =
     window.SpeechRecognition || window.webkitSpeechRecognition;
 
   if (!speechRecognition) {
-    console.error("❌ Speech Recognition Not Supported!");
-    alert("Your browser does not support Speech Recognition.");
+    alert("Speech Recognition not supported in your browser.");
     return null;
   }
 
-  let recognition = new speechRecognition();
+  const recognition = new speechRecognition();
   recognition.continuous = false;
   recognition.interimResults = false;
   recognition.lang = "en-US";
 
   recognition.onstart = () => {
-    console.log("🎙️ Speech Recognition Started...");
     setSpeaking(true);
     setPrompt("Listening...");
     setResponse(false);
   };
 
   recognition.onresult = (e) => {
-    let transcript = e.results[e.resultIndex][0].transcript;
-    console.log("🎙️ Recognized:", transcript);
+    const transcript = e.results[e.resultIndex][0].transcript;
     setPrompt(transcript);
-    setResponse(false); // Ensure it doesn't show AI response yet
-
-    setTimeout(() => {
-      takeCommand(transcript.toLowerCase()); // ✅ Pass the command to AI
-    }, 500);
+    setResponse(false);
+    setTimeout(() => takeCommand(transcript.toLowerCase()), 500);
   };
 
   recognition.onerror = (e) => console.error("❌ Speech Recognition Error:", e);
-
-  recognition.onend = () => {
-    console.log("🛑 Speech Recognition Stopped.");
-    setSpeaking(false);
-  };
+  recognition.onend = () => setSpeaking(false);
 
   function takeCommand(command) {
     if (command.includes("open") && command.includes("youtube")) {
       window.open("https://www.youtube.com/", "_blank");
       speak("Opening YouTube");
-      setResponse(true);
       setPrompt("Opening YouTube");
+      setResponse(true);
     } else if (command.includes("open") && command.includes("google")) {
       window.open("https://www.google.com/", "_blank");
       speak("Opening Google");
-      setResponse(true);
       setPrompt("Opening Google");
+      setResponse(true);
     } else if (command.includes("time")) {
-      let time = new Date().toLocaleTimeString();
+      const time = new Date().toLocaleTimeString();
       speak(`The time is ${time}`);
-      setResponse(true);
       setPrompt(`The time is ${time}`);
-    } else if (command.includes("date")) {
-      let date = new Date().toLocaleDateString();
-      speak(`Today's date is ${date}`);
       setResponse(true);
+    } else if (command.includes("date")) {
+      const date = new Date().toLocaleDateString();
+      speak(`Today's date is ${date}`);
       setPrompt(`Today's date is ${date}`);
+      setResponse(true);
     } else {
       aiResponse(command);
     }
   }
 
-  let value = {
+  const contextValue = {
     recognition,
     speaking,
     prompt,
@@ -140,7 +124,9 @@ function UserContext({ children }) {
     },
   };
 
-  return <dataContext.Provider value={value}>{children}</dataContext.Provider>;
+  return (
+    <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>
+  );
 }
 
-export default UserContext;
+export default UserContextProvider;

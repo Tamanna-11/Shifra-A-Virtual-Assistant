@@ -2,12 +2,12 @@ import React, { useContext, useEffect, useRef } from "react";
 import "./App.css";
 import va from "./assets/ai.png";
 import { CiMicrophoneOn } from "react-icons/ci";
-import { dataContext } from "./context/userContext";
+import { UserContext } from "./context/UserContext";
 import speakimg from "./assets/speak(1).gif";
 import aigif from "./assets/aiVoice.gif";
 
 function App() {
-  let { recognition, speaking, prompt, response } = useContext(dataContext);
+  let { recognition, speaking, prompt, response } = useContext(UserContext);
 
   const responseRef = useRef(null); // Reference for auto-scrolling
 
